@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "142365708932",
+    "project_id": "featureflagsshowcase",
+    "storage_bucket": "featureflagsshowcase.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:142365708932:android:c5468dc08e30b8142828d1",
+        "android_client_info": {
+          "package_name": "io.github.boguszpawlowski.featureFlagsShowcase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "142365708932-590c1l7b0terc67ako9ab82sna7ibmt7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA73iO4fAMzT01A7n1y36BVYTUV0xuJ4m0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "142365708932-590c1l7b0terc67ako9ab82sna7ibmt7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
