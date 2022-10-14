@@ -18,6 +18,10 @@ android {
 }
 
 dependencies {
+  implementation(project(autoModules.featureFlags))
+  implementation(project(autoModules.featureFlags.firebase))
+  implementation(project(autoModules.featureFlags.local))
+
   implementation(Kotlin.StdLib)
   implementation(Kotlin.Ksp)
 
@@ -28,6 +32,7 @@ dependencies {
   implementation(AndroidX.ComposeActivity)
 
   implementation(Compose.Ui)
+  implementation(Compose.UiTooling)
   implementation(Compose.Foundation)
   implementation(Compose.FoundationLayout)
   implementation(Compose.Material)
