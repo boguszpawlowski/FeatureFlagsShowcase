@@ -12,13 +12,13 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.spoton.featureflags.FeatureFlag.AdsNumber
-import com.spoton.featureflags.FeatureFlag.AnalyticSessionFraction
-import com.spoton.featureflags.FeatureFlag.ButtonName
-import com.spoton.featureflags.FeatureFlag.IsFeature1Enabled
-import com.spoton.featureflags.config.FeatureConfig
+//import io.github.boguszpawlowski.featureFlags.firebase.firebaseFeatureFlagModule
 import io.github.boguszpawlowski.featureFlagsShowcase.control.FeatureControlScreen
+import io.github.boguszpawlowski.featureFlagsShowcase.control.FeatureControlViewModel
+import org.koin.androidx.compose.getViewModel
 
 class MainActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun MainScreen() {
+
   MaterialTheme(
     colors = if (isSystemInDarkTheme()) darkColors() else lightColors()
   ) {
@@ -41,15 +42,15 @@ fun MainScreen() {
         }
       }
     ) { paddingValues ->
+
+      val viewModel = getViewModel<FeatureControlViewModel>()
+
+      val featureConfig by viewModel.featureConfig.collectAsState()
+
       FeatureControlScreen(
         modifier = Modifier.padding(paddingValues),
-        featureConfig = FeatureConfig(
-          IsFeature1Enabled to true,
-          ButtonName to "Button Name",
-          AnalyticSessionFraction to 1.0,
-          AdsNumber to 2L,
-        ),
-        onFeatureValueChanged = { _, _ -> }
+        featureConfig = featureConfig,
+        onFeatureValueChanged = viewModel::onValueChanged,
       )
     }
   }

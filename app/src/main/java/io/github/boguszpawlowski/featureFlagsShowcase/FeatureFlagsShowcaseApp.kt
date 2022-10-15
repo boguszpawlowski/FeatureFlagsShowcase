@@ -1,10 +1,12 @@
 package io.github.boguszpawlowski.featureFlagsShowcase
 
 import android.app.Application
-import com.spoton.featureflags.di.featureFlagModule
-import com.spoton.featureflags.provider.FeatureFlagProvider
+import io.github.boguszpawlowski.featureFlags.di.featureFlagModule
+//import io.github.boguszpawlowski.featureFlags.firebase.firebaseFeatureFlagModule
+//import io.github.boguszpawlowski.featureFlags.local.di.localFeatureFlagsModule
+import io.github.boguszpawlowski.featureFlagsShowcase.di.applicationModule
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import org.koin.dsl.module
 
 class FeatureFlagsShowcaseApp: Application() {
 
@@ -12,12 +14,13 @@ class FeatureFlagsShowcaseApp: Application() {
     super.onCreate()
 
     startKoin {
+      androidContext(applicationContext)
       modules(
         featureFlagModule,
+        applicationModule,
+//        localFeatureFlagsModule,
+//        firebaseFeatureFlagModule,
       )
     }
   }
-}
-
-private val applicationModule = module {
 }

@@ -18,9 +18,9 @@ android {
 }
 
 dependencies {
-  implementation(project(autoModules.featureFlags))
-  implementation(project(autoModules.featureFlags.firebase))
-  implementation(project(autoModules.featureFlags.local))
+  implementation(project(":featureFlags"))
+  implementation(project(":featureFlags:firebase"))
+  implementation(project(":featureFlags:local"))
 
   implementation(Kotlin.StdLib)
   implementation(Kotlin.Ksp)
@@ -43,6 +43,8 @@ dependencies {
   implementation(KotlinXSerialization.Json)
 
   implementation(Koin.Core)
+  implementation(Koin.Android)
+  implementation(Koin.Compose)
 
   implementation(AndroidX.Activity)
   implementation(AndroidX.Startup)

@@ -1,5 +1,6 @@
 package io.github.boguszpawlowski.featureFlagsShowcase.control
 
+import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -15,16 +17,19 @@ import androidx.compose.material.Switch
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
-import com.spoton.featureflags.FeatureFlag
-import com.spoton.featureflags.FeatureFlagType
-import com.spoton.featureflags.config.FeatureConfig
-import com.spoton.featureflags.provider.FeatureFlagProvider
+import io.github.boguszpawlowski.featureFlags.FeatureFlag
+import io.github.boguszpawlowski.featureFlags.FeatureFlagType
+import io.github.boguszpawlowski.featureFlags.config.FeatureConfig
+import io.github.boguszpawlowski.featureFlags.firebase.Marker
+import io.github.boguszpawlowski.featureFlags.provider.FeatureFlagProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -112,9 +117,18 @@ fun TextFeature(
   value: String,
   onValueChanged: (FeatureFlag<String>, String) -> Unit,
 ) {
+  val (currentText, onTextChanged) = remember(value) { mutableStateOf(value) }
+
+  val actions = remember {
+    KeyboardActions {
+      onValueChanged(featureFlag, currentText)
+    }
+  }
+
   TextField(
-    value = value,
-    onValueChange = { onValueChanged(featureFlag, it) }
+    value = currentText,
+    onValueChange = onTextChanged,
+    keyboardActions = actions,
   )
 }
 
@@ -124,10 +138,19 @@ fun FloatingPointFeature(
   value: Double,
   onValueChanged: (FeatureFlag<Double>, Double) -> Unit,
 ) {
+  val (currentText, onTextChanged) = remember(value) { mutableStateOf(value.toString()) }
+
+  val actions = remember {
+    KeyboardActions {
+      onValueChanged(featureFlag, currentText.toDouble())
+    }
+  }
+
   TextField(
-    value = value.toString(),
+    value = currentText,
     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
-    onValueChange = { onValueChanged(featureFlag, it.toDouble()) }
+    onValueChange = onTextChanged,
+    keyboardActions = actions,
   )
 }
 
@@ -137,10 +160,19 @@ fun NumericFeature(
   value: Long,
   onValueChanged: (FeatureFlag<Long>, Long) -> Unit,
 ) {
+  val (currentText, onTextChanged) = remember(value) { mutableStateOf(value.toString()) }
+
+  val actions = remember {
+    KeyboardActions {
+      onValueChanged(featureFlag, currentText.toLong())
+    }
+  }
+
   TextField(
     value = value.toString(),
     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-    onValueChange = { onValueChanged(featureFlag, it.toLong()) }
+    onValueChange = onTextChanged,
+    keyboardActions = actions,
   )
 }
 
@@ -193,12 +225,69 @@ fun NumericFeaturePreview() {
 }
 
 class FeatureControlViewModel(
-  featureFlagProvider: FeatureFlagProvider,
+  private val featureFlagProvider: FeatureFlagProvider,
+  private val saveFeatureFlagValue: SaveFeatureFlagValue,
 ) : ViewModel() {
 
   private val _featureConfig = MutableStateFlow(featureFlagProvider.get())
   val featureConfig: StateFlow<FeatureConfig> = _featureConfig
 
+  init {
+    fetchFeatureConfig()
+  }
+
   fun <T : Any> onValueChanged(featureFlag: FeatureFlag<T>, newValue: T) {
+    saveFeatureFlagValue(featureFlag, newValue)
+    fetchFeatureConfig()
+  }
+
+  private fun fetchFeatureConfig() {
+    _featureConfig.value = featureFlagProvider.get()
+  }
+}
+
+class SaveFeatureFlagValue(
+  private val sharedPreferences: SharedPreferences,
+) {
+  operator fun invoke(flag: FeatureFlag<*>, value: Any) {
+    val editor = sharedPreferences.edit()
+    when (flag.type) {
+      FeatureFlagType.FloatingPoint -> {
+        editor.putFloat(flag.key, (value as Double).toFloat())
+      }
+      FeatureFlagType.Logical -> {
+        editor.putBoolean(flag.key, value as Boolean)
+      }
+      FeatureFlagType.Numeric -> {
+        editor.putLong(flag.key, value as Long)
+      }
+      FeatureFlagType.Text -> {
+        editor.putString(flag.key, value as String)
+      }
+    }
+    editor.commit()
+  }
+}
+
+class SaveLocalConfigOverride(
+  private val sharedPreferences: SharedPreferences,
+) {
+  operator fun invoke(flag: FeatureFlag<*>, value: Any) {
+    val editor = sharedPreferences.edit()
+    when (flag.type) {
+      FeatureFlagType.FloatingPoint -> {
+        editor.putFloat(flag.key, (value as Double).toFloat())
+      }
+      FeatureFlagType.Logical -> {
+        editor.putBoolean(flag.key, value as Boolean)
+      }
+      FeatureFlagType.Numeric -> {
+        editor.putLong(flag.key, value as Long)
+      }
+      FeatureFlagType.Text -> {
+        editor.putString(flag.key, value as String)
+      }
+    }
+    editor.commit()
   }
 }

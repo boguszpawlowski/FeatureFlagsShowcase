@@ -4,12 +4,12 @@ plugins {
 }
 
 dependencies {
-    implementation(project(autoModules.featureFlags))
+  implementation(project(":featureFlags"))
 
-    implementation(Kotlin.StdLib)
+  implementation(Kotlin.StdLib)
 
-    implementation(platform(Firebase.Bom))
-    implementation(Firebase.RemoteConfig)
+  implementation(platform(Firebase.Bom))
+  implementation(Firebase.RemoteConfig)
 
-    implementation(Timber.Core)
+  implementation(Koin.Core)
 }

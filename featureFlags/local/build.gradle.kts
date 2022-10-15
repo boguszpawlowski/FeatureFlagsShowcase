@@ -4,8 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(autoModules.featureFlags))
+    implementation(project(":featureFlags"))
 
-    implementation(Coroutines.Core)
-    implementation(Timber.Core)
+    implementation(Koin.Core)
 }
