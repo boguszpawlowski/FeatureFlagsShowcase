@@ -1,10 +1,11 @@
 plugins {
-    id(Android.LibraryPluginId)
-    id("common-android-plugin")
+  id(Android.LibraryPluginId)
+  kotlin(Kotlin.AndroidPluginId)
+  id("common-android-plugin")
 }
 
 dependencies {
-  implementation(project(":featureFlags"))
+  implementation(project(autoModules.featureFlags))
 
   implementation(Kotlin.StdLib)
 

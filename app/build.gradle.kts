@@ -15,12 +15,18 @@ android {
     versionCode = commitsCount
     versionName = App.VersionName
   }
+
+  buildFeatures.compose = true
+
+  composeOptions {
+    kotlinCompilerExtensionVersion = Compose.CompilerVersion
+  }
 }
 
 dependencies {
-  implementation(project(":featureFlags"))
-  implementation(project(":featureFlags:firebase"))
-  implementation(project(":featureFlags:local"))
+  implementation(project(autoModules.featureFlags))
+  implementation(project(autoModules.featureFlags.firebase))
+  implementation(project(autoModules.featureFlags.local))
 
   implementation(Kotlin.StdLib)
   implementation(Kotlin.Ksp)
@@ -45,6 +51,8 @@ dependencies {
   implementation(Koin.Core)
   implementation(Koin.Android)
   implementation(Koin.Compose)
+
+  implementation(Timber.Core)
 
   implementation(AndroidX.Activity)
   implementation(AndroidX.Startup)

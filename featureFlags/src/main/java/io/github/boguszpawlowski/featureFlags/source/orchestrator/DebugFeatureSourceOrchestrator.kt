@@ -9,10 +9,10 @@ internal class DebugFeatureSourceOrchestrator(
   private val remoteSource: FeatureSource,
 ) : FeatureSourceOrchestrator {
 
-    override fun getFeatureConfig(): FeatureConfig {
-        return when (shouldUseLocalOverride.test()) {
-            true -> localSource.getFeatureConfig()
-            false -> remoteSource.getFeatureConfig()
-        }
+  override fun getFeatureConfig(): FeatureConfig {
+    return when (shouldUseLocalOverride.test()) {
+      true -> localSource.getFeatureConfig()
+      false -> remoteSource.getFeatureConfig()
     }
+  }
 }

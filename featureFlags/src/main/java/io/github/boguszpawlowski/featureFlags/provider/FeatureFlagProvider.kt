@@ -7,8 +7,8 @@ import io.github.boguszpawlowski.featureFlags.source.FeatureSource
 class FeatureFlagProvider internal constructor(
   private val featureSource: FeatureSource,
 ) {
-    fun get(): FeatureConfig = featureSource.getFeatureConfig()
+  fun get(): FeatureConfig = featureSource.getFeatureConfig()
 
-    fun <T : Any> get(featureFlag: FeatureFlag<T>): T =
-        featureSource.getFeatureConfig()[featureFlag]
+  fun <T : Any> get(featureFlag: FeatureFlag<T>): T =
+    featureSource.getFeatureConfig()[featureFlag]
 }

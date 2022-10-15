@@ -1,13 +1,13 @@
 plugins {
-    kotlin(Kotlin.JvmPluginId)
+  kotlin(Kotlin.JvmPluginId)
 }
 
 repositories {
-    mavenCentral()
-    google()
+  mavenCentral()
+  google()
 }
 
 dependencies {
-    implementation(Kotlin.StdLib)
-    implementation(Koin.Core)
+  implementation(Kotlin.StdLib)
+  implementation(Koin.Core)
 }

@@ -10,5 +10,5 @@ internal class LocalFeatureFlagOverridePredicate(
 ) : ShouldUseLocalOverridePredicate {
 
   override fun test(): Boolean =
-    sharedPreferences.getBoolean(LocalFeatureConfigOverrideFlag, false,)
+    sharedPreferences.getBoolean(LocalFeatureConfigOverrideFlag, false)
 }

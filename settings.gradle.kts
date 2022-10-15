@@ -1,4 +1,3 @@
-include(":app")
-include(":featureFlags")
-include(":featureFlags:local")
-include(":featureFlags:firebase")
+plugins {
+  id("com.pablisco.gradle.automodule") version "0.14"
+}

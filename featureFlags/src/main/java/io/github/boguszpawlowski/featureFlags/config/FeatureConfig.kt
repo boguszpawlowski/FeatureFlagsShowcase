@@ -6,10 +6,9 @@ import io.github.boguszpawlowski.featureFlags.FeatureFlag
 class FeatureConfig(
   val featureFlags: Map<FeatureFlag<*>, *>,
 ) {
-    constructor(
-      vararg featureFlags: Pair<FeatureFlag<*>, *>,
-    ) : this(featureFlags.toMap())
+  constructor(
+    vararg featureFlags: Pair<FeatureFlag<*>, *>,
+  ) : this(featureFlags.toMap())
 
-    operator fun <T : Any> get(featureFlag: FeatureFlag<T>): T = featureFlags[featureFlag] as T
-
+  operator fun <T : Any> get(featureFlag: FeatureFlag<T>): T = featureFlags[featureFlag] as T
 }

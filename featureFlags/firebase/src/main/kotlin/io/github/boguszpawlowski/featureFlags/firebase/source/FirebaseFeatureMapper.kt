@@ -23,7 +23,7 @@ internal class FirebaseFeatureMapper(
       val remoteValue = when (featureFlag.type) {
         FeatureFlagType.Logical -> rawRemoteValue?.asBoolean()
         FeatureFlagType.Numeric -> rawRemoteValue?.asLong()
-        FeatureFlagType.FloatingPoint -> rawRemoteValue?.asDouble()
+        FeatureFlagType.FloatingPoint -> rawRemoteValue?.asDouble()?.toFloat()
         FeatureFlagType.Text -> rawRemoteValue?.asString()
       }
 

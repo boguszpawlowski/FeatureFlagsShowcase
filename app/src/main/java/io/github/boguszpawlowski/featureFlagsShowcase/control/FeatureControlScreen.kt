@@ -1,16 +1,21 @@
+@file:OptIn(ExperimentalComposeUiApi::class)
+
 package io.github.boguszpawlowski.featureFlagsShowcase.control
 
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Card
+import androidx.compose.material.DropdownMenu
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Switch
@@ -20,23 +25,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
+import androidx.core.content.edit
 import io.github.boguszpawlowski.featureFlags.FeatureFlag
 import io.github.boguszpawlowski.featureFlags.FeatureFlagType
 import io.github.boguszpawlowski.featureFlags.config.FeatureConfig
-import io.github.boguszpawlowski.featureFlags.firebase.Marker
-import io.github.boguszpawlowski.featureFlags.provider.FeatureFlagProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import io.github.boguszpawlowski.featureFlags.local.source.LocalFeatureConfigOverrideFlag
 
 @Composable
 fun FeatureControlScreen(
   featureConfig: FeatureConfig,
+  isUsingLocalValues: Boolean,
   onFeatureValueChanged: (FeatureFlag<Any>, Any) -> Unit,
+  onUsingLocalConfigChanged: (Boolean) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   Surface(
@@ -47,29 +54,39 @@ fun FeatureControlScreen(
     LazyColumn(
       verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+      item {
+        LocalConfigOverrideControl(
+          value = isUsingLocalValues,
+          onValueChanged = onUsingLocalConfigChanged,
+        )
+      }
       featureConfig.featureFlags.forEach { (featureFlag, value) ->
         item(featureFlag.key) {
-          FeatureWrapper(name = featureFlag.name) {
+          FeatureWrapper {
             when (featureFlag.type) {
               FeatureFlagType.FloatingPoint -> FloatingPointFeature(
-                featureFlag = featureFlag as FeatureFlag<Double>,
-                value = value as Double,
+                featureFlag = featureFlag as FeatureFlag<Float>,
+                value = value as Float,
                 onValueChanged = onFeatureValueChanged,
+                isUsingLocalValues = isUsingLocalValues,
               )
               FeatureFlagType.Logical -> LogicalFeature(
                 featureFlag = featureFlag as FeatureFlag<Boolean>,
                 value = value as Boolean,
                 onValueChanged = onFeatureValueChanged,
+                isUsingLocalValues = isUsingLocalValues,
               )
               FeatureFlagType.Numeric -> NumericFeature(
                 featureFlag = featureFlag as FeatureFlag<Long>,
                 value = value as Long,
                 onValueChanged = onFeatureValueChanged,
+                isUsingLocalValues = isUsingLocalValues,
               )
               FeatureFlagType.Text -> TextFeature(
                 featureFlag = featureFlag as FeatureFlag<String>,
                 value = value as String,
                 onValueChanged = onFeatureValueChanged,
+                isUsingLocalValues = isUsingLocalValues,
               )
             }
           }
@@ -81,19 +98,36 @@ fun FeatureControlScreen(
 
 @Composable
 fun FeatureWrapper(
-  name: String,
-  content: @Composable BoxScope.() -> Unit,
+  content: @Composable RowScope.() -> Unit,
+) {
+  Card(
+    modifier = Modifier.fillMaxWidth(),
+  ) {
+    Row(
+      modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      content()
+    }
+  }
+}
+
+@Composable
+fun LocalConfigOverrideControl(
+  value: Boolean,
+  onValueChanged: (Boolean) -> Unit,
 ) {
   Row(
     modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.SpaceBetween,
-    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.SpaceBetween
   ) {
-    Box {
-      content()
-    }
+    Switch(
+      checked = value,
+      onCheckedChange = onValueChanged,
+    )
     Text(
-      text = name,
+      text = "Use local Feature Config",
       style = MaterialTheme.typography.body1,
     )
   }
@@ -104,10 +138,17 @@ fun LogicalFeature(
   featureFlag: FeatureFlag<Boolean>,
   value: Boolean,
   onValueChanged: (FeatureFlag<Boolean>, Boolean) -> Unit,
+  isUsingLocalValues: Boolean,
 ) {
   Switch(
     checked = value,
+    enabled = isUsingLocalValues,
     onCheckedChange = { onValueChanged(featureFlag, it) },
+  )
+  Spacer(modifier = Modifier.width(8.dp))
+  Text(
+    text = featureFlag.name,
+    style = MaterialTheme.typography.body1,
   )
 }
 
@@ -116,39 +157,57 @@ fun TextFeature(
   featureFlag: FeatureFlag<String>,
   value: String,
   onValueChanged: (FeatureFlag<String>, String) -> Unit,
+  isUsingLocalValues: Boolean,
 ) {
   val (currentText, onTextChanged) = remember(value) { mutableStateOf(value) }
+  val keyboardController = LocalSoftwareKeyboardController.current
 
-  val actions = remember {
-    KeyboardActions {
-      onValueChanged(featureFlag, currentText)
-    }
+  val actions = KeyboardActions {
+    keyboardController?.hide()
+    onValueChanged(featureFlag, currentText)
   }
 
   TextField(
     value = currentText,
+    modifier = Modifier.fillMaxWidth(),
+    enabled = isUsingLocalValues,
     onValueChange = onTextChanged,
+    label = {
+      Text(text = featureFlag.name)
+    },
+    keyboardOptions = KeyboardOptions.Default.copy(
+      imeAction = ImeAction.Done,
+    ),
     keyboardActions = actions,
   )
 }
 
 @Composable
 fun FloatingPointFeature(
-  featureFlag: FeatureFlag<Double>,
-  value: Double,
-  onValueChanged: (FeatureFlag<Double>, Double) -> Unit,
+  featureFlag: FeatureFlag<Float>,
+  value: Float,
+  onValueChanged: (FeatureFlag<Float>, Float) -> Unit,
+  isUsingLocalValues: Boolean,
 ) {
   val (currentText, onTextChanged) = remember(value) { mutableStateOf(value.toString()) }
+  val keyboardController = LocalSoftwareKeyboardController.current
 
-  val actions = remember {
-    KeyboardActions {
-      onValueChanged(featureFlag, currentText.toDouble())
-    }
+  val actions = KeyboardActions {
+    keyboardController?.hide()
+    onValueChanged(featureFlag, currentText.toFloat())
   }
 
   TextField(
     value = currentText,
-    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
+    modifier = Modifier.fillMaxWidth(),
+    enabled = isUsingLocalValues,
+    label = {
+      Text(text = featureFlag.name)
+    },
+    keyboardOptions = KeyboardOptions.Default.copy(
+      keyboardType = KeyboardType.Decimal,
+      imeAction = ImeAction.Done,
+    ),
     onValueChange = onTextChanged,
     keyboardActions = actions,
   )
@@ -159,18 +218,27 @@ fun NumericFeature(
   featureFlag: FeatureFlag<Long>,
   value: Long,
   onValueChanged: (FeatureFlag<Long>, Long) -> Unit,
+  isUsingLocalValues: Boolean,
 ) {
   val (currentText, onTextChanged) = remember(value) { mutableStateOf(value.toString()) }
+  val keyboardController = LocalSoftwareKeyboardController.current
 
-  val actions = remember {
-    KeyboardActions {
-      onValueChanged(featureFlag, currentText.toLong())
-    }
+  val actions = KeyboardActions {
+    keyboardController?.hide()
+    onValueChanged(featureFlag, currentText.toLong())
   }
 
   TextField(
-    value = value.toString(),
-    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+    value = currentText,
+    modifier = Modifier.fillMaxWidth(),
+    enabled = isUsingLocalValues,
+    label = {
+      Text(text = featureFlag.name)
+    },
+    keyboardOptions = KeyboardOptions.Default.copy(
+      keyboardType = KeyboardType.Number,
+      imeAction = ImeAction.Done,
+    ),
     onValueChange = onTextChanged,
     keyboardActions = actions,
   )
@@ -184,6 +252,7 @@ fun LogicalFeaturePreview() {
       featureFlag = FeatureFlag.IsFeature1Enabled,
       value = true,
       onValueChanged = { _, _ -> },
+      isUsingLocalValues = true,
     )
   }
 }
@@ -196,6 +265,7 @@ fun TextFeaturePreview() {
       featureFlag = FeatureFlag.ButtonName,
       value = "Button Name",
       onValueChanged = { _, _ -> },
+      isUsingLocalValues = true,
     )
   }
 }
@@ -206,8 +276,9 @@ fun FloatingPointFeaturePreview() {
   MaterialTheme {
     FloatingPointFeature(
       featureFlag = FeatureFlag.AnalyticSessionFraction,
-      value = 0.5,
+      value = 0.5f,
       onValueChanged = { _, _ -> },
+      isUsingLocalValues = true,
     )
   }
 }
@@ -220,29 +291,8 @@ fun NumericFeaturePreview() {
       featureFlag = FeatureFlag.AdsNumber,
       value = 10,
       onValueChanged = { _, _ -> },
+      isUsingLocalValues = true,
     )
-  }
-}
-
-class FeatureControlViewModel(
-  private val featureFlagProvider: FeatureFlagProvider,
-  private val saveFeatureFlagValue: SaveFeatureFlagValue,
-) : ViewModel() {
-
-  private val _featureConfig = MutableStateFlow(featureFlagProvider.get())
-  val featureConfig: StateFlow<FeatureConfig> = _featureConfig
-
-  init {
-    fetchFeatureConfig()
-  }
-
-  fun <T : Any> onValueChanged(featureFlag: FeatureFlag<T>, newValue: T) {
-    saveFeatureFlagValue(featureFlag, newValue)
-    fetchFeatureConfig()
-  }
-
-  private fun fetchFeatureConfig() {
-    _featureConfig.value = featureFlagProvider.get()
   }
 }
 
@@ -253,7 +303,7 @@ class SaveFeatureFlagValue(
     val editor = sharedPreferences.edit()
     when (flag.type) {
       FeatureFlagType.FloatingPoint -> {
-        editor.putFloat(flag.key, (value as Double).toFloat())
+        editor.putFloat(flag.key, value as Float)
       }
       FeatureFlagType.Logical -> {
         editor.putBoolean(flag.key, value as Boolean)
@@ -272,22 +322,16 @@ class SaveFeatureFlagValue(
 class SaveLocalConfigOverride(
   private val sharedPreferences: SharedPreferences,
 ) {
-  operator fun invoke(flag: FeatureFlag<*>, value: Any) {
-    val editor = sharedPreferences.edit()
-    when (flag.type) {
-      FeatureFlagType.FloatingPoint -> {
-        editor.putFloat(flag.key, (value as Double).toFloat())
-      }
-      FeatureFlagType.Logical -> {
-        editor.putBoolean(flag.key, value as Boolean)
-      }
-      FeatureFlagType.Numeric -> {
-        editor.putLong(flag.key, value as Long)
-      }
-      FeatureFlagType.Text -> {
-        editor.putString(flag.key, value as String)
-      }
+  operator fun invoke(newValue: Boolean) {
+    sharedPreferences.edit(commit = true) {
+      putBoolean(LocalFeatureConfigOverrideFlag, newValue)
     }
-    editor.commit()
   }
+}
+
+class LoadLocalConfigOverride(
+  private val sharedPreferences: SharedPreferences,
+) {
+  operator fun invoke(): Boolean =
+    sharedPreferences.getBoolean(LocalFeatureConfigOverrideFlag, false)
 }

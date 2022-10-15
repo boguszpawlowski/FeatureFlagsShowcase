@@ -6,8 +6,8 @@ import io.github.boguszpawlowski.featureFlags.FeatureFlag.ButtonName as ButtonNa
 import io.github.boguszpawlowski.featureFlags.FeatureFlag.IsFeature1Enabled as IsFeature1Enabled1Flag
 
 enum class Feature(val featureFlag: FeatureFlag<*>) {
-    IsFeature1Enabled(IsFeature1Enabled1Flag),
-    ButtonName(ButtonNameFlag),
-    AnalyticSessionFraction(AnalyticSessionFractionFlag),
-    AdsNumber(AdsNumberFlag),
+  IsFeature1Enabled(IsFeature1Enabled1Flag),
+  ButtonName(ButtonNameFlag),
+  AnalyticSessionFraction(AnalyticSessionFractionFlag),
+  AdsNumber(AdsNumberFlag),
 }
