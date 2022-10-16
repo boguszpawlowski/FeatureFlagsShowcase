@@ -5,14 +5,12 @@ import io.github.boguszpawlowski.featureFlags.Feature
 import io.github.boguszpawlowski.featureFlags.FeatureFlagType
 import io.github.boguszpawlowski.featureFlags.config.FeatureConfig
 
-internal class FirebaseFeatureMapper(
-  private val features: Array<Feature> = Feature.values(),
-) {
+internal class FirebaseFeatureMapper {
   fun map(
     remoteValues: Map<String, FirebaseRemoteConfigValue>,
     isDebug: Boolean,
   ): FeatureConfig {
-    val featureFlags = features.associate {
+    val featureFlags = Feature.values().associate {
       val featureFlag = it.featureFlag
       val defaultValue = when (isDebug) {
         true -> featureFlag.defaultDebugValue

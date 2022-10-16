@@ -7,6 +7,7 @@ import io.github.boguszpawlowski.featureFlagsShowcase.control.FeatureControlView
 import io.github.boguszpawlowski.featureFlagsShowcase.control.LoadLocalConfigOverride
 import io.github.boguszpawlowski.featureFlagsShowcase.control.SaveFeatureFlagValue
 import io.github.boguszpawlowski.featureFlagsShowcase.control.SaveLocalConfigOverride
+import io.github.boguszpawlowski.featureFlagsShowcase.feature.FeatureViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -18,6 +19,12 @@ val applicationModule = module {
       featureFlagProvider = get(),
       loadLocalConfigOverride = get(),
       saveLocalConfigOverride = get(),
+    )
+  }
+
+  viewModel {
+    FeatureViewModel(
+      featureFlagProvider = get(),
     )
   }
 
