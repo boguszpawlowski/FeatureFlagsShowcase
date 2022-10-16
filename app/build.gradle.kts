@@ -8,12 +8,15 @@ plugins {
   id(Kotlin.KspPluginId) version Kotlin.KspVersion
 }
 
-val commitsCount = Grgit.open(mapOf("dir" to rootDir)).log().size
+val versionMajor = 1
+val versionMinor = 0
+val versionPatch = 0
+val currentVersionCode = versionMajor * 1000 + versionMinor * 10 + versionPatch
 
 android {
   defaultConfig {
-    versionCode = commitsCount
-    versionName = App.VersionName
+    versionCode = currentVersionCode
+    versionName = "$versionMajor.$versionMinor.$versionPatch"
   }
 
   buildFeatures.compose = true
@@ -60,8 +63,8 @@ dependencies {
 
   implementation(platform(Firebase.Bom))
   implementation(Firebase.RemoteConfig)
+  implementation(Firebase.Analytics)
 
-  debugImplementation(Debug.LeakCanary)
   debugImplementation(Hyperion.Core)
   debugImplementation(Hyperion.Plugin)
   kspDebug(Hyperion.autoServiceKsp)

@@ -2,12 +2,10 @@
 
 package io.github.boguszpawlowski.featureFlagsShowcase.control
 
-import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -15,13 +13,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
-import androidx.compose.material.DropdownMenu
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Switch
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,24 +31,21 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.edit
 import io.github.boguszpawlowski.featureFlags.FeatureFlag
 import io.github.boguszpawlowski.featureFlags.FeatureFlagType
-import io.github.boguszpawlowski.featureFlags.config.FeatureConfig
-import io.github.boguszpawlowski.featureFlags.local.source.LocalFeatureConfigOverrideFlag
+import org.koin.androidx.compose.getViewModel
 
 @Composable
 fun FeatureControlScreen(
-  featureConfig: FeatureConfig,
-  isUsingLocalValues: Boolean,
-  onFeatureValueChanged: (FeatureFlag<Any>, Any) -> Unit,
-  onUsingLocalConfigChanged: (Boolean) -> Unit,
   modifier: Modifier = Modifier,
+  viewModel: FeatureControlViewModel = getViewModel(),
 ) {
+  val viewState by viewModel.viewState.collectAsState()
+  val featureConfig = viewState.featureConfig
+  val isUsingLocalValues = viewState.isUsingLocalValue
+
   Surface(
-    modifier = modifier
-      .fillMaxSize()
-      .padding(16.dp),
+    modifier = modifier,
   ) {
     LazyColumn(
       verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -57,7 +53,7 @@ fun FeatureControlScreen(
       item {
         LocalConfigOverrideControl(
           value = isUsingLocalValues,
-          onValueChanged = onUsingLocalConfigChanged,
+          onValueChanged = viewModel::onLocalOverrideChanged,
         )
       }
       featureConfig.featureFlags.forEach { (featureFlag, value) ->
@@ -67,25 +63,25 @@ fun FeatureControlScreen(
               FeatureFlagType.FloatingPoint -> FloatingPointFeature(
                 featureFlag = featureFlag as FeatureFlag<Float>,
                 value = value as Float,
-                onValueChanged = onFeatureValueChanged,
+                onValueChanged = viewModel::onValueChanged,
                 isUsingLocalValues = isUsingLocalValues,
               )
               FeatureFlagType.Logical -> LogicalFeature(
                 featureFlag = featureFlag as FeatureFlag<Boolean>,
                 value = value as Boolean,
-                onValueChanged = onFeatureValueChanged,
+                onValueChanged = viewModel::onValueChanged,
                 isUsingLocalValues = isUsingLocalValues,
               )
               FeatureFlagType.Numeric -> NumericFeature(
                 featureFlag = featureFlag as FeatureFlag<Long>,
                 value = value as Long,
-                onValueChanged = onFeatureValueChanged,
+                onValueChanged = viewModel::onValueChanged,
                 isUsingLocalValues = isUsingLocalValues,
               )
               FeatureFlagType.Text -> TextFeature(
                 featureFlag = featureFlag as FeatureFlag<String>,
                 value = value as String,
-                onValueChanged = onFeatureValueChanged,
+                onValueChanged = viewModel::onValueChanged,
                 isUsingLocalValues = isUsingLocalValues,
               )
             }
@@ -120,7 +116,8 @@ fun LocalConfigOverrideControl(
 ) {
   Row(
     modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.SpaceBetween
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically,
   ) {
     Switch(
       checked = value,
@@ -194,7 +191,9 @@ fun FloatingPointFeature(
 
   val actions = KeyboardActions {
     keyboardController?.hide()
-    onValueChanged(featureFlag, currentText.toFloat())
+    currentText.toFloatOrNull()?.let {
+      onValueChanged(featureFlag, it)
+    }
   }
 
   TextField(
@@ -225,7 +224,9 @@ fun NumericFeature(
 
   val actions = KeyboardActions {
     keyboardController?.hide()
-    onValueChanged(featureFlag, currentText.toLong())
+    currentText.toLongOrNull()?.let {
+      onValueChanged(featureFlag, it)
+    }
   }
 
   TextField(
@@ -294,44 +295,4 @@ fun NumericFeaturePreview() {
       isUsingLocalValues = true,
     )
   }
-}
-
-class SaveFeatureFlagValue(
-  private val sharedPreferences: SharedPreferences,
-) {
-  operator fun invoke(flag: FeatureFlag<*>, value: Any) {
-    val editor = sharedPreferences.edit()
-    when (flag.type) {
-      FeatureFlagType.FloatingPoint -> {
-        editor.putFloat(flag.key, value as Float)
-      }
-      FeatureFlagType.Logical -> {
-        editor.putBoolean(flag.key, value as Boolean)
-      }
-      FeatureFlagType.Numeric -> {
-        editor.putLong(flag.key, value as Long)
-      }
-      FeatureFlagType.Text -> {
-        editor.putString(flag.key, value as String)
-      }
-    }
-    editor.commit()
-  }
-}
-
-class SaveLocalConfigOverride(
-  private val sharedPreferences: SharedPreferences,
-) {
-  operator fun invoke(newValue: Boolean) {
-    sharedPreferences.edit(commit = true) {
-      putBoolean(LocalFeatureConfigOverrideFlag, newValue)
-    }
-  }
-}
-
-class LoadLocalConfigOverride(
-  private val sharedPreferences: SharedPreferences,
-) {
-  operator fun invoke(): Boolean =
-    sharedPreferences.getBoolean(LocalFeatureConfigOverrideFlag, false)
 }

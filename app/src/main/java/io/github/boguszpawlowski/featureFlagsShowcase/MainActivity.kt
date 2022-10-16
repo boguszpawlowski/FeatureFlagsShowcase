@@ -6,20 +6,26 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.darkColors
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import io.github.boguszpawlowski.featureFlagsShowcase.control.FeatureControlScreen
-import io.github.boguszpawlowski.featureFlagsShowcase.control.FeatureControlViewModel
-import org.koin.androidx.compose.getViewModel
+import io.github.boguszpawlowski.featureFlagsShowcase.feature.FeatureScreen
 
 class MainActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +38,7 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun MainScreen() {
+  val navController = rememberNavController()
 
   MaterialTheme(
     colors = if (isSystemInDarkTheme()) darkColors() else lightColors()
@@ -45,20 +52,42 @@ fun MainScreen() {
             style = MaterialTheme.typography.h6,
           )
         }
+      },
+      bottomBar = {
+        BottomNavigation {
+          BottomNavigationItem(
+            selected = navController.currentDestination?.route == "Home",
+            icon = {
+              Icon(imageVector = Icons.Filled.Home, contentDescription = "Home")
+            },
+            onClick = { navController.navigate("Home") }
+          )
+          BottomNavigationItem(
+            selected = navController.currentDestination?.route == "Settings",
+            icon = {
+              Icon(imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+            },
+            onClick = { navController.navigate("Settings") }
+          )
+        }
       }
     ) { paddingValues ->
-
-      val viewModel = getViewModel<FeatureControlViewModel>()
-
-      val viewState by viewModel.viewState.collectAsState()
-
-      FeatureControlScreen(
-        modifier = Modifier.padding(paddingValues),
-        featureConfig = viewState.featureConfig,
-        isUsingLocalValues = viewState.isUsingLocalValue,
-        onFeatureValueChanged = viewModel::onValueChanged,
-        onUsingLocalConfigChanged = viewModel::onLocalOverrideChanged,
-      )
+      NavHost(
+        navController = navController,
+        startDestination = "Home"
+      ) {
+        val modifier = Modifier.padding(paddingValues).fillMaxSize().padding(8.dp)
+        composable("Home") {
+          FeatureScreen(
+            modifier = modifier,
+          )
+        }
+        composable("Settings") {
+          FeatureControlScreen(
+            modifier = modifier,
+          )
+        }
+      }
     }
   }
 }
