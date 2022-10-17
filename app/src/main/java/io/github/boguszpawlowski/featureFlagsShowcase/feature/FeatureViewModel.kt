@@ -18,14 +18,13 @@ class FeatureViewModel(
   }
 
   private fun fetchFeatureConfig() {
-    featureFlagProvider.get().let { featureFlag ->
-      _viewState.value = _viewState.value.copy(
-        isFeature1Enabled = featureFlag[FeatureFlag.IsFeature1Enabled],
-        buttonName = featureFlag[FeatureFlag.ButtonName],
-        analyticsFraction = featureFlag[FeatureFlag.AnalyticSessionFraction],
-        adsNumber = featureFlag[FeatureFlag.AdsNumber],
-      )
-    }
+    val featureConfig = featureFlagProvider.get()
+    _viewState.value = _viewState.value.copy(
+      isFeature1Enabled = featureConfig[FeatureFlag.IsFeature1Enabled],
+      buttonName = featureConfig[FeatureFlag.ButtonName],
+      analyticsFraction = featureConfig[FeatureFlag.AnalyticSessionFraction],
+      adsNumber = featureConfig[FeatureFlag.AdsNumber],
+    )
   }
 
   data class ViewState(

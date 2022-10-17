@@ -52,7 +52,7 @@ fun FeatureScreen(
       Spacer(modifier = Modifier.height(8.dp))
 
       Text(
-        text = "Analytics sessionChance: ${viewState.analyticsFraction * 100}%",
+        text = "Chance for analytic session: ${viewState.analyticsFraction * 100}%",
         style = MaterialTheme.typography.h6,
       )
 

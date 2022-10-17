@@ -1,5 +1,5 @@
 # Feature Flags Showcase
-Sample project for showcasing how to implement Feature Flags on Android.
+Sample project for Feature Flags talk.
 
 ## License
 
