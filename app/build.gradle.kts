@@ -8,16 +8,29 @@ plugins {
   id(Kotlin.KspPluginId) version Kotlin.KspVersion
 }
 
-val commitsCount = Grgit.open(mapOf("dir" to rootDir)).log().size
+val versionMajor = 1
+val versionMinor = 0
+val versionPatch = 0
+val currentVersionCode = versionMajor * 1000 + versionMinor * 10 + versionPatch
 
 android {
   defaultConfig {
-    versionCode = commitsCount
-    versionName = App.VersionName
+    versionCode = currentVersionCode
+    versionName = "$versionMajor.$versionMinor.$versionPatch"
+  }
+
+  buildFeatures.compose = true
+
+  composeOptions {
+    kotlinCompilerExtensionVersion = Compose.CompilerVersion
   }
 }
 
 dependencies {
+  implementation(project(autoModules.featureFlags))
+  implementation(project(autoModules.featureFlags.firebase))
+  implementation(project(autoModules.featureFlags.local))
+
   implementation(Kotlin.StdLib)
   implementation(Kotlin.Ksp)
 
@@ -28,6 +41,7 @@ dependencies {
   implementation(AndroidX.ComposeActivity)
 
   implementation(Compose.Ui)
+  implementation(Compose.UiTooling)
   implementation(Compose.Foundation)
   implementation(Compose.FoundationLayout)
   implementation(Compose.Material)
@@ -38,6 +52,10 @@ dependencies {
   implementation(KotlinXSerialization.Json)
 
   implementation(Koin.Core)
+  implementation(Koin.Android)
+  implementation(Koin.Compose)
+
+  implementation(Timber.Core)
 
   implementation(AndroidX.Activity)
   implementation(AndroidX.Startup)
@@ -45,8 +63,8 @@ dependencies {
 
   implementation(platform(Firebase.Bom))
   implementation(Firebase.RemoteConfig)
+  implementation(Firebase.Analytics)
 
-  debugImplementation(Debug.LeakCanary)
   debugImplementation(Hyperion.Core)
   debugImplementation(Hyperion.Plugin)
   kspDebug(Hyperion.autoServiceKsp)

@@ -134,9 +134,11 @@ object DetektLib {
 
 object Koin {
   const val Version = "3.2.2"
+  const val ComposeVersion = "3.2.1"
 
   const val Core = "io.insert-koin:koin-core:$Version"
   const val Android = "io.insert-koin:koin-android:$Version"
+  const val Compose = "io.insert-koin:koin-androidx-compose:$ComposeVersion"
 }
 
 object Timber {
@@ -176,7 +178,7 @@ object Firebase {
 
   const val Analytics = "com.google.firebase:firebase-analytics-ktx"
   const val Crashlytics = "com.google.firebase:firebase-crashlytics-ktx"
-  const val RemoteConfig = "com.google.firebase:firebase-config"
+  const val RemoteConfig = "com.google.firebase:firebase-config-ktx:"
 }
 
 object Debug {

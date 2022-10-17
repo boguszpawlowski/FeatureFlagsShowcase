@@ -46,7 +46,6 @@ allprojects {
         "-Xopt-in=kotlin.RequiresOptIn",
         "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
         "-Xskip-prerelease-check",
-        "-Xuse-experimental=kotlin.contracts.ExperimentalContracts",
         "-Xjvm-enable-preview"
       )
     }
